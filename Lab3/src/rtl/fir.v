@@ -147,10 +147,10 @@ module fir
     end
     
     //-----------------------------tap_RAM signal------------------------------------------
-    assign tap_EN = 1;
+    assign tap_EN = (state == IDLE || state == CAL) ? 4'b1111 : 4'b0000;
     assign tap_WE = (state == IDLE) ? ((awvalid && wvalid) ? 4'b1111 : 4'b0000) : 4'b0000;
     assign tap_Di = wdata;
-    assign tap_A = (awvalid == 1) ? (awaddr-12'h20): tap_A_r; // if read use
+    assign tap_A = (state == IDLE) ? ((awvalid && wvalid ) ? (awaddr-12'h20) : tap_A_r) : tap_A_r; // if read use
     
     
     //-----------------------------data_RAM signal---------------------------------------------

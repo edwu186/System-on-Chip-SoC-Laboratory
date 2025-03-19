@@ -195,7 +195,6 @@ module fir_tb
         $display(" Tape programming done ...");
         $display(" Start FIR");
         @(posedge axis_clk) config_write(12'h00, 32'h0000_0001);    // ap_start = 1
-        awvalid <= 0; wvalid <= 0; //need reset awvalid and wvalid
         $display("----End the coefficient input(AXI-lite)----");
     end
 
