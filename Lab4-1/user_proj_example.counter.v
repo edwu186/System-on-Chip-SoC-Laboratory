@@ -13,7 +13,7 @@
 // limitations under the License.
 // SPDX-License-Identifier: Apache-2.0
 
-`default_nettype none
+`default_nettype wire
 /*
  *-------------------------------------------------------------
  *
@@ -34,6 +34,9 @@
  *
  *-------------------------------------------------------------
  */
+`define MPRJ_IO_PADS_1 19	/* number of user GPIO pads on user1 side */
+`define MPRJ_IO_PADS_2 19	/* number of user GPIO pads on user2 side */
+`define MPRJ_IO_PADS (`MPRJ_IO_PADS_1 + `MPRJ_IO_PADS_2)
 
 module user_proj_example #(
     parameter BITS = 32,
@@ -72,23 +75,59 @@ module user_proj_example #(
     wire clk;
     wire rst;
 
-    wire [`MPRJ_IO_PADS-1:0] io_in;
-    wire [`MPRJ_IO_PADS-1:0] io_out;
-    wire [`MPRJ_IO_PADS-1:0] io_oeb;
+    // wire [`MPRJ_IO_PADS-1:0] io_in;
+    // wire [`MPRJ_IO_PADS-1:0] io_out;
+    // wire [`MPRJ_IO_PADS-1:0] io_oeb;
 
+    wire ram_en; //bram enable input by master (valid)
+    wire [3:0] ram_we; //bram write enable(byte)
+    wire [31:0] ram_data_i; //bram data_in
+    wire [31:0] ram_data_o; //bram data_out
+    wire [31:0] ram_adr;    //address in bram
+
+    reg ready; //outpyt by slave(READY)
+    reg [3:0] count;
     
+    // Wishbone Signals 
+    assign clk = wb_clk_i;
+    assign rst = wb_rst_i;
+
+    assign ram_en = wbs_cyc_i && wbs_stb_i && ((wbs_adr_i[31:20] == 12'h380) ? 1'b1 : 1'b0);
+    assign ram_we = ram_en ? ({4{wbs_we_i}} & wbs_sel_i) : 4'b0;
+    assign wbs_ack_o = ready;
+
+    assign ram_adr = ram_en ? wbs_adr_i : 32'b0;
+    assign ram_data_i = ram_en ? wbs_dat_i : 32'b0;
+    assign wbs_dat_o = ram_data_o;
+
+    always @(posedge clk) begin
+        if(rst) begin
+            ready <= 1'b0;
+            count <= 4'b0;
+        end else if(ram_en) begin
+            if(count == DELAYS) begin
+                ready <= 1'b1;
+                count <= 4'b0;
+            end
+            else begin
+                ready <= 1'b0;
+                count <= count + 1'b1;
+            end
+        end else begin
+            ready <= 1'b0;
+            count <= 4'b0;
+        end
+    end
 
     bram user_bram (
         .CLK(clk),
-        .WE0(),
-        .EN0(),
-        .Di0(),
-        .Do0(),
-        .A0()
+        .WE0(ram_we),
+        .EN0(ram_en),
+        .Di0(ram_data_i),
+        .Do0(ram_data_o),
+        .A0(ram_adr)
     );
 
 endmodule
-
-
 
 `default_nettype wire

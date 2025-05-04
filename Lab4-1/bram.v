@@ -14,8 +14,8 @@ module bram(
     output  reg     [31:0]  Do0;
     input   wire    [31:0]   A0;
 
-    // 16 kB
-    parameter N = ;
+    // 16 kB = 4byte*2^N
+    parameter N = 12;
     (* ram_style = "block" *) reg [31:0] RAM[0:2**N-1];
 
 

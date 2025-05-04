@@ -127,6 +127,8 @@ void main()
 		}
 	}
 */	
+
+//reg_mprj_datal = 0xAB400000;  16=2^4 shift to the address  AB40
 	int* tmp = fir();
 	reg_mprj_datal = *tmp << 16;
 	reg_mprj_datal = *(tmp+1) << 16;
